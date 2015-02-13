@@ -1,0 +1,3 @@
+cell_lines = ['CCK-81', 'COLO-320-HSR', 'DIFI,'HCT-116',
+ 'HT-115','HT-29','SK-CO-1',,'SNU-C2B','SNU-C5','W1116',
+ 'SW1463',SW620',SW837']
