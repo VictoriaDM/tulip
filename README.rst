@@ -10,6 +10,7 @@ todo list
 * [ ] Plot the IC50 (histogram, 2D plots ...)
 * [x] identifiy the cell lines 
 * [ ] identify identifiers of the cell lines
+* [ ] identifiers of the drug
 * [ ] identifiy identifers of the targets of interests
 * [ ] do we have other ICYY ?
 
