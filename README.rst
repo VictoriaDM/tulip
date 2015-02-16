@@ -11,6 +11,7 @@ todo list
 * [x] identifiy the cell lines 
 * [ ] identify identifiers of the cell lines
 * [ ] identifiy identifers of the targets of interests
+* [ ] do we have other ICYY ?
 
 
 
