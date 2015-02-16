@@ -20,6 +20,7 @@ Notes
 
 cell lines
 --------------
+see src/metadata.py file
 
 Targets/inhibitors
 ------------------------
