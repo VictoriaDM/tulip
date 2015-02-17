@@ -22,13 +22,35 @@ http://www.uniprot.org/uniprot/P62753
 (x) RSKp90 : P90rsk (also called RSK1 or mitogen-activated protein kinase-activated protein kinase 1). 
 Phosphorylates a wide range of substrates including ribosomal protein S6.
 
-( ) MEK: 
+( ) MEK: Mitogen/Extracellular signal-regulated Kinase. 
 
-(x) SMAD2: inds the TRE element in the promoter region of many genes that are regulated by TGF-beta and, 
+(x) SMAD2: Binds the TRE element in the promoter region of many genes that are regulated by TGF-beta and, 
 on formation of the SMAD2/SMAD4 complex, activates transcription. May act as a tumor suppressor in colorectal 
 carcinoma. Positively regulates PDPK1 kinase activity by stimulating its dissociation from the 14-3-3 protein
 YWHAQ which acts as a negative regulator.
 http://www.uniprot.org/uniprot/Q15796
+
+(x) cJun: Transcription factor that recognizes and binds to the enhancer heptamer motif 5'-TGA[CG]TCA-3'. 
+Promotes activity of NR5A1 when phosphorylated by HIPK3 leading to increased steroidogenic gene expression 
+upon cAMP signaling pathway stimulation.
+http://www.uniprot.org/uniprot/P05412
+
+( ) p38 : Four p38 MAP kinases, p38-α (MAPK14), -β (MAPK11), -γ (MAPK12 / ERK6), and -δ (MAPK13 / SAPK4) identified.
+
+
+( ) JNK
+
+( ) EGFR
+
+( ) PI3K
+
+( ) AKT
+
+( ) mTOR
+
+
+
+
 
 
 
