@@ -12,7 +12,7 @@ http://www.uniprot.org/uniprot/P49841
 Key regulator of NFkB pathway (inhibits the NF-κB transcription factor), activated by ubiquitin mediated degradation of IkBa by the proteasome.
 http://www.uniprot.org/uniprot/P25963
 
-(x) ERK : MAPK1/MAPK2??
+(X) ERK : MAPK1/MAPK2??
 
 (x) RPS6: Component of the 40S ribosomal subunit and is therefore thought to be involved in regulating translation.
 May play an important role in controlling cell growth and proliferation through the selective translation of 
