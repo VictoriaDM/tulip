@@ -55,6 +55,11 @@ MTOR directly or indirectly regulates the phosphorylation of at least 800 protei
 http://www.uniprot.org/uniprot/P42345
 
 
+READOUTS OF THE MODEL
+#####################
+
+ ['GSK3', 'IkBa',  'ERK', 'RPS6', 'RSKp90', 'SMAD2', 'cJun', 'p38', 'mTOR'] 
+
 
 
 
