@@ -5,6 +5,7 @@ cell_lines = ['CCK-81', 'COLO-320-HSR', 'DIFI','HCT-116',
 
 inhibitors = ['PI3K', 'mTOR', 'MEKi', 'TBK1', 'IKK', 'PLX','TAK']
 
+readouts= ['AKT', 'EGFR', 'ERK', 'GSK3', 'IkBa', 'JNK', 'MEK', 'PI3Kp85', 'RPS6', 'RSKp90', 'SMAD2', 'cJun', 'mTOR', 'p38' ]
 
 mapping_inhibitor = {
         1066: 'PI3K',
