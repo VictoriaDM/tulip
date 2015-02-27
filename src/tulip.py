@@ -7,28 +7,33 @@ import metadata
 import linreg
 import os
 from os.path import join as pj
-
+import itertools
+import time
 
 from easydev.progressbar import progress_bar as PB
 
 class Tulip(object):
-    def __init__(self, inhibitor='PLX', path='../data/'):
+    def __init__(self, inhibitor='PLX', path='../data/', use_auc=True):
         self.path = path
-        self.IC50 = pd.read_json(os.sep.join([self.path, os.sep, 'IC50.json']))
-        self.inhibitors = self.IC50.index
+        if use_auc is True:
+            self.IC50 = pd.read_json(os.sep.join([self.path, os.sep, 'AUC.json']))
+        else:
+            self.IC50 = pd.read_json(os.sep.join([self.path, os.sep, 'IC50.json']))
 
+        self.inhibitors = self.IC50.index
 
         self._inhibitor = inhibitor
         self._Y = None
         self._X = None
+        self.fillna = 0.15
         self.inhibitor = inhibitor # this set the data and y
         self.method = 'ridge'
 
 
 
-    def _set_y(self,  fillna=1):
+    def _set_y(self):
         self._Y =  self.IC50.ix[self.inhibitor].copy()
-        self._Y.fillna(fillna, inplace=True)
+        self._Y.fillna(self.fillna, inplace=True)
         self._Y = self.Y.values
 
     def _set_data(self, inhibitor=None):
@@ -83,7 +88,9 @@ class Tulip(object):
         Ytest = self.Y[selection_integer[N:]]
         return Xtrain, Ytrain, Xtest, Ytest, selection
 
-    def get_errors(self, phosphos, alpha=0.1, N=12, iterations=100):
+    def get_errors(self, phosphos, alpha=0.1, N=12, iterations=None,
+            progress=True):
+
 
         from sklearn.linear_model import Ridge, LinearRegression, Lasso
         if self.method == 'ridge':
@@ -95,25 +102,90 @@ class Tulip(object):
         else:
             raise NotImplementedError
 
+        if iterations is None:
+            combos = list(itertools.combinations(self.cellLines, N))
+            iterations = len(combos)
+            random_cells = False
+        else:
+            random_cells = True
+
+
         errors = []
         scores = []
         selections = []
-        pb = PB(iterations)
-        import time
+        if progress is True:
+            pb = PB(iterations)
+
         for i in range(0,iterations):
-            Xtrain, Ytrain, Xtest, Ytest, selection = self.train(phosphos, N=12)
+            if random_cells is True:
+                Xtrain, Ytrain, Xtest, Ytest, selection = self.train(phosphos, N=12)
+            else:
+                X = self.X[phosphos]
+                selection = list(combos[i])
+                indices = [self.cellLines.index(this) for this in combos[i]]
+
+                selection_inv = [this for this in self.cellLines if this not in
+                        selection]
+                indices_inv = [this for this in range(0,14) if this not in
+                        indices]
+
+                Xtrain = X.ix[selection]
+                Ytrain = self.Y[indices]
+                Xtest = X.ix[selection_inv]
+                Ytest = self.Y[indices_inv]
+
+
             ridge.fit(Xtrain, Ytrain)
             scores.append(ridge.score(Xtrain, Ytrain))
             percent_error = abs(ridge.predict(Xtest) - Ytest)/abs(Ytest) * 100
             errors.append(percent_error)
             selections.append([this for this in self.cellLines if this not in
                 selection])
-            pb.animate(i, time.time()-pb.start)
+            if progress is True:
+                pb.animate(i, time.time()-pb.start)
 
         df = pd.DataFrame({
             'errors':list(flatten(errors)),
             'cellLine': list(flatten(selections))})
         return df, scores
+
+
+    def get_phospho_combos(self, M=14):
+        # There are 18383 combos, we select 14 at most for each combo
+        # we select i phophos. For each case, we select at most 14 cases
+        all_combos = []
+        for i in range(1,15):
+
+            combos = list(itertools.combinations(self.phosphos, i))
+            if len(combos) > M:
+                np.random.shuffle(combos)
+                combos = combos[0:M]
+            all_combos.extend(combos)
+        return all_combos
+
+
+    def get_results(self, alpha=0.01, N=12 , method='ridge'):
+
+        self.method = method
+        results = {}
+        combo_phosphos = self.get_phospho_combos()
+        pb = PB(len(combo_phosphos)*len(self.inhibitors))
+        for j,inhibitor in enumerate(self.inhibitors):
+            self.inhbitor = inhibitor
+            results[inhibitor] = {'i':[], 'combo':[],'errors':[], 'scores':[]}
+            for i, combo in enumerate(combo_phosphos):
+                df, scores = self.get_errors(list(combo), alpha=alpha, N=N,
+                        progress=False)
+                results[inhibitor]['i'].append(i)
+                results[inhibitor]['combo'].append(combo)
+                results[inhibitor]['errors'].append(df['errors'].mean())
+                results[inhibitor]['scores'].append(np.mean(scores))
+
+                pb.animate(j*len(combo_phosphos)+i,time.time() - pb.start)
+
+        df = pd.DataFrame(results)
+        return df
+
 
 
 
