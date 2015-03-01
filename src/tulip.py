@@ -16,7 +16,7 @@ class Tulip(object):
     def __init__(self, inhibitor='PLX', path='../data/', use_auc=True):
         self.path = path
         if use_auc is True:
-            self.IC50 = pd.read_json(os.sep.join([self.path, os.sep, 'AUC.json']))
+            self.IC50 = 1 - pd.read_json(os.sep.join([self.path, os.sep, 'AUC.json']))
         else:
             self.IC50 = pd.read_json(os.sep.join([self.path, os.sep, 'IC50.json']))
 
@@ -25,10 +25,10 @@ class Tulip(object):
         self._inhibitor = inhibitor
         self._Y = None
         self._X = None
-        self.fillna = 0.15
+        self.fillna = 0.84
         self.inhibitor = inhibitor # this set the data and y
         self.method = 'ridge'
-
+        self.l1_ratio = 0.5
 
 
     def _set_y(self):
@@ -37,8 +37,13 @@ class Tulip(object):
         self._Y = self.Y.values
 
     def _set_data(self, inhibitor=None):
+        if self.inhibitor == 'MEK':
+            inh = 'MEKi'
+        else:
+
+            inh=self.inhibitor
         filename = os.sep.join([self.path, os.sep,
-            'inhibitors/%s_zscores_inh.json' % self.inhibitor])
+            'inhibitors/%s_zscores_inh.json' % inh])
         df = pd.read_json(open(filename, 'r').read())
         #inhibitor = 'MEK'  # note that for MEK, there is an i in the filename but no in
         # the header...
@@ -92,13 +97,15 @@ class Tulip(object):
             progress=True):
 
 
-        from sklearn.linear_model import Ridge, LinearRegression, Lasso
+        from sklearn.linear_model import ElasticNet, Ridge, LinearRegression, Lasso
         if self.method == 'ridge':
             ridge = Ridge(alpha=alpha)
         elif self.method == 'linear':
             ridge = LinearRegression()
         elif self.method == 'lasso':
             ridge = Lasso(alpha=alpha)
+        elif self.method == 'elastic':
+            ridge = ElasticNet(alpha=alpha, l1_ratio=self.l1_ratio)
         else:
             raise NotImplementedError
 
@@ -113,6 +120,7 @@ class Tulip(object):
         errors = []
         scores = []
         selections = []
+        parameters = []
         if progress is True:
             pb = PB(iterations)
 
@@ -139,15 +147,18 @@ class Tulip(object):
             scores.append(ridge.score(Xtrain, Ytrain))
             percent_error = abs(ridge.predict(Xtest) - Ytest)/abs(Ytest) * 100
             errors.append(percent_error)
+            parameters.append(ridge.coef_)
             selections.append([this for this in self.cellLines if this not in
                 selection])
             if progress is True:
                 pb.animate(i, time.time()-pb.start)
 
+        
+
         df = pd.DataFrame({
             'errors':list(flatten(errors)),
             'cellLine': list(flatten(selections))})
-        return df, scores
+        return df, scores, parameters
 
 
     def get_phospho_combos(self, M=14):
@@ -169,22 +180,30 @@ class Tulip(object):
         self.method = method
         results = {}
         combo_phosphos = self.get_phospho_combos()
+
+        combo_phosphos = combo_phosphos[0:]
         pb = PB(len(combo_phosphos)*len(self.inhibitors))
         for j,inhibitor in enumerate(self.inhibitors):
-            self.inhbitor = inhibitor
-            results[inhibitor] = {'i':[], 'combo':[],'errors':[], 'scores':[]}
+            self.inhibitor = inhibitor
+           
+            results[inhibitor] = {'i':[], 'combo':[],'errors':[], 'scores':[], 'params':[]}
             for i, combo in enumerate(combo_phosphos):
-                df, scores = self.get_errors(list(combo), alpha=alpha, N=N,
+                df, scores, params = self.get_errors(list(combo), alpha=alpha, N=N,
                         progress=False)
-                results[inhibitor]['i'].append(i)
-                results[inhibitor]['combo'].append(combo)
                 results[inhibitor]['errors'].append(df['errors'].mean())
                 results[inhibitor]['scores'].append(np.mean(scores))
 
                 pb.animate(j*len(combo_phosphos)+i,time.time() - pb.start)
 
         df = pd.DataFrame(results)
-        return df
+
+        scores = pd.DataFrame(dict([(k,df[k]['scores']) for k in df.columns]))
+        scores.index = combo_phosphos
+
+        errors = pd.DataFrame(dict([(k,df[k]['errors']) for k in df.columns]))
+        errors.index = combo_phosphos
+
+        return scores, errors
 
 
 
