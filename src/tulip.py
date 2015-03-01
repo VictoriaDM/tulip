@@ -94,18 +94,18 @@ class Tulip(object):
         return Xtrain, Ytrain, Xtest, Ytest, selection
 
     def get_errors(self, phosphos, alpha=0.1, N=12, iterations=None,
-            progress=True):
+            progress=True, norm=False):
 
 
         from sklearn.linear_model import ElasticNet, Ridge, LinearRegression, Lasso
         if self.method == 'ridge':
-            ridge = Ridge(alpha=alpha)
+            ridge = Ridge(alpha=alpha, normalize=norm)
         elif self.method == 'linear':
-            ridge = LinearRegression()
+            ridge = LinearRegression(normalize=norm)
         elif self.method == 'lasso':
-            ridge = Lasso(alpha=alpha)
+            ridge = Lasso(alpha=alpha, normalize=norm)
         elif self.method == 'elastic':
-            ridge = ElasticNet(alpha=alpha, l1_ratio=self.l1_ratio)
+            ridge = ElasticNet(alpha=alpha, l1_ratio=self.l1_ratio, normalize=norm)
         else:
             raise NotImplementedError
 
@@ -115,7 +115,6 @@ class Tulip(object):
             random_cells = False
         else:
             random_cells = True
-
 
         errors = []
         scores = []
@@ -128,7 +127,7 @@ class Tulip(object):
             if random_cells is True:
                 Xtrain, Ytrain, Xtest, Ytest, selection = self.train(phosphos, N=12)
             else:
-                X = self.X[phosphos]
+                X = self.X[phosphos].copy()
                 selection = list(combos[i])
                 indices = [self.cellLines.index(this) for this in combos[i]]
 
@@ -175,11 +174,11 @@ class Tulip(object):
         return all_combos
 
 
-    def get_results(self, alpha=0.01, N=12 , method='ridge'):
+    def get_results(self, alpha=0.01, N=12 , method='ridge', max_combo=14, norm=False):
 
         self.method = method
         results = {}
-        combo_phosphos = self.get_phospho_combos()
+        combo_phosphos = self.get_phospho_combos(M=max_combo)
 
         combo_phosphos = combo_phosphos[0:]
         pb = PB(len(combo_phosphos)*len(self.inhibitors))
@@ -189,7 +188,7 @@ class Tulip(object):
             results[inhibitor] = {'i':[], 'combo':[],'errors':[], 'scores':[], 'params':[]}
             for i, combo in enumerate(combo_phosphos):
                 df, scores, params = self.get_errors(list(combo), alpha=alpha, N=N,
-                        progress=False)
+                        progress=False, norm=norm)
                 results[inhibitor]['errors'].append(df['errors'].mean())
                 results[inhibitor]['scores'].append(np.mean(scores))
 
